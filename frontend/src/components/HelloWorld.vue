@@ -1,43 +1,54 @@
+<template>
+  <h1>{{ msg }}</h1>
+  <button @click="createPreference()">Pay Now</button>
+  <div v-if="preferenceId" id="wallet_container"></div>
+</template>
+
 <script setup>
-import { ref } from 'vue'
+import axios from 'axios';
+import { loadMercadoPago } from "@mercadopago/sdk-js";
+import { onMounted, ref } from 'vue';
 
 defineProps({
   msg: String,
-})
+});
 
-const count = ref(0)
-</script>
+const preferenceId = ref(null);
 
-<template>
-  <h1>{{ msg }}</h1>
+onMounted(async () => {
+  await loadMercadoPago();
+});
 
-  <div class="card">
-    <button type="button" @click="count++">count is {{ count }}</button>
-    <p>
-      Edit
-      <code>components/HelloWorld.vue</code> to test HMR
-    </p>
-  </div>
 
-  <p>
-    Check out
-    <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
-      >create-vue</a
-    >, the official Vue + Vite starter
-  </p>
-  <p>
-    Learn more about IDE Support for Vue in the
-    <a
-      href="https://vuejs.org/guide/scaling-up/tooling.html#ide-support"
-      target="_blank"
-      >Vue Docs Scaling up Guide</a
-    >.
-  </p>
-  <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
-</template>
+const createPreference = async () => {
+  try {
+    const mercadoPagoKey = import.meta.env.VITE_PUBLIC_MERCADOPAGO_KEY;
+    const mp = new MercadoPago(mercadoPagoKey, { locale: 'es-AR' });
+    const bricksBuilder = mp.bricks();
 
-<style scoped>
-.read-the-docs {
-  color: #888;
+    const response = await axios.post('http://localhost:3000/create-preference', {
+      title: 'louie wuz here',
+      quantity: 1,
+      unit_price: 7000,
+    });
+
+    const { id } = response.data;
+    preferenceId.value = id;
+
+    bricksBuilder.create("wallet", "wallet_container", {
+      initialization: {
+        preferenceId: preferenceId.value,
+      },
+      customization: {
+        texts: {
+          valueProp: 'smart_option',
+        },
+      },
+    });
+
+    return id;
+  } catch (error) {
+    console.log(error);
+  }
 }
-</style>
+</script>
