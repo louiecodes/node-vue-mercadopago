@@ -5,9 +5,9 @@
 </template>
 
 <script setup>
-import axios from 'axios';
 import { loadMercadoPago } from "@mercadopago/sdk-js";
 import { onMounted, ref } from 'vue';
+import apiClient from "../plugins/axios";
 
 defineProps({
   msg: String,
@@ -26,7 +26,7 @@ const createPreference = async () => {
     const mp = new MercadoPago(mercadoPagoKey, { locale: 'es-AR' });
     const bricksBuilder = mp.bricks();
 
-    const response = await axios.post('http://localhost:3000/create-preference', {
+    const response = await apiClient.post('/create-preference', {
       title: 'louie wuz here',
       quantity: 1,
       unit_price: 7000,
